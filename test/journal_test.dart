@@ -95,6 +95,32 @@ void main() {
       expect(journal.traitements, isEmpty);
     });
 
+    test("un mélange partage un identifiant d'intervention", () {
+      final journal = Journal();
+      final p = journal.addParcelle(nom: 'Les Hauts', culture: 'Vigne');
+      final premier = traitement(id: 'a', parcelleId: p.id);
+      final second = Traitement(
+        id: 'b',
+        interventionId: premier.intervention,
+        parcelleId: p.id,
+        date: premier.date,
+        amm: '2200059',
+        produit: 'LIMOCIDE J',
+        culture: 'Vigne',
+        cible: 'Mildiou(s)',
+        dose: '2',
+        doseUnite: 'L/hL',
+        darJours: 10,
+      );
+      journal.addTraitement(premier);
+      journal.addTraitement(second);
+
+      expect(journal.interventionDe(premier).length, 2);
+      expect(journal.interventionDe(second).length, 2);
+      expect(premier.intervention, 'a');
+      expect(second.intervention, 'a');
+    });
+
     test('sérialisation complète du carnet', () {
       final journal = Journal();
       final p = journal.addParcelle(
@@ -122,12 +148,14 @@ void main() {
       );
 
       expect(
-        csv.startsWith('\uFEFFDate;Heure début;Heure fin;Parcelle;Culture'),
+        csv.startsWith(
+          '\uFEFFDate;Intervention;Heure début;Heure fin;Parcelle;Culture',
+        ),
         isTrue,
       );
       expect(
         csv.contains(
-          '12/05/2026;08:30;10:15;Les Hauts;Vigne;OROCIDE;2180631;Mildiou(s)',
+          '12/05/2026;t1;08:30;10:15;Les Hauts;Vigne;OROCIDE;2180631;Mildiou(s)',
         ),
         isTrue,
       );

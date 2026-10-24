@@ -6,6 +6,7 @@ import '../../data/scope.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
 import 'parcelle_form.dart';
+import 'pickers.dart';
 import 'traitement_form.dart';
 
 class ParcelleScreen extends StatelessWidget {
@@ -82,6 +83,7 @@ class ParcelleScreen extends StatelessWidget {
                     padding: const EdgeInsets.only(bottom: 8),
                     child: _TraitementTile(
                       traitement: t,
+                      taille: journal.interventionDe(t).length,
                       retrait:
                           scope.dataset.product(t.amm)?.isWithdrawn ?? false,
                       onTap: () => _showSheet(context, t, parcelle.nom),
@@ -223,9 +225,139 @@ class ParcelleScreen extends StatelessWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _ajouterAuMelange(context, traitement);
+                  },
+                  icon: const Icon(Icons.add_circle_outline, size: 18),
+                  label: const Text('Ajouter un produit au mélange'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Un mélange fait une ligne par produit, reliées par le même '
+                'identifiant d\'intervention. Chaque produit garde son AMM et '
+                'son DAR ; la compatibilité physique n\'est jamais garantie par '
+                'l\'AMM — faites un test en bidon.',
+                style: TextStyle(
+                  fontSize: 11,
+                  height: 1.4,
+                  color: Color(0xFF8A4B00),
+                ),
+              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// Ajoute un second produit au même passage : deux lignes, un identifiant
+  /// d'intervention commun.
+  Future<void> _ajouterAuMelange(BuildContext context, Traitement base) async {
+    final produit = await pickProduct(context);
+    if (produit == null || !context.mounted) return;
+
+    final scope = PhytiaScope.of(context);
+    final data = scope.dataset;
+
+    var dose = '';
+    var unite = '';
+    var dar = '';
+    final usages = data
+        .usagesForProduct(produit.amm, includeWithdrawn: false)
+        .where((u) => u.culture == base.culture)
+        .toList();
+    if (usages.isNotEmpty) {
+      dose = usages.first.dose;
+      unite = usages.first.doseUnit;
+      dar = usages.first.darDays;
+    }
+
+    final doseCtrl = TextEditingController(text: dose);
+    final uniteCtrl = TextEditingController(text: unite);
+    final darCtrl = TextEditingController(text: dar);
+
+    final confirme = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(produit.name),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: TextField(
+                    controller: doseCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(labelText: 'Dose'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: uniteCtrl,
+                    decoration: const InputDecoration(labelText: 'Unité'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: darCtrl,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'DAR',
+                suffixText: 'jours',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Ajouter'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirme != true) return;
+    scope.journal.addTraitement(
+      Traitement(
+        id: scope.journal.newTraitementId(),
+        interventionId: base.intervention,
+        parcelleId: base.parcelleId,
+        date: base.date,
+        amm: produit.amm,
+        produit: produit.name,
+        culture: base.culture,
+        cible: base.cible,
+        dose: doseCtrl.text.trim(),
+        doseUnite: uniteCtrl.text.trim(),
+        darJours: int.tryParse(darCtrl.text.trim()),
+        surfaceTraiteeM2: base.surfaceTraiteeM2,
+        stadeBbch: base.stadeBbch,
+        operateur: base.operateur,
+        note: base.note,
+        modeConduite: base.modeConduite,
+        latitude: base.latitude,
+        longitude: base.longitude,
+        heureDebut: base.heureDebut,
+        heureFin: base.heureFin,
+        volumeBouillie: base.volumeBouillie,
       ),
     );
   }
@@ -342,11 +474,13 @@ class _Header extends StatelessWidget {
 class _TraitementTile extends StatelessWidget {
   const _TraitementTile({
     required this.traitement,
+    required this.taille,
     required this.retrait,
     required this.onTap,
   });
 
   final Traitement traitement;
+  final int taille;
   final bool retrait;
   final VoidCallback onTap;
 
@@ -407,6 +541,11 @@ class _TraitementTile extends StatelessWidget {
                 spacing: 6,
                 runSpacing: 6,
                 children: [
+                  if (taille > 1)
+                    Pill(
+                      'Mélange de $taille produits',
+                      icon: Icons.science_outlined,
+                    ),
                   if (retrait)
                     const Pill(
                       'Produit retiré',

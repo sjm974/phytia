@@ -43,6 +43,10 @@ class JournalStore extends ChangeNotifier {
 
   List<Traitement> get derniersTraitements => _journal.derniersTraitements;
 
+  /// Produits appliqués dans le même passage (mélange).
+  List<Traitement> interventionDe(Traitement traitement) =>
+      _journal.interventionDe(traitement);
+
   String newTraitementId() => Journal.newId();
 
   Parcelle addParcelle({

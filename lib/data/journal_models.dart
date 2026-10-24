@@ -120,6 +120,7 @@ class Traitement {
     this.heureDebut = '',
     this.heureFin = '',
     this.volumeBouillie,
+    this.interventionId = '',
   });
 
   final String id;
@@ -150,6 +151,12 @@ class Traitement {
 
   /// Volume total de bouillie préparé pour cette parcelle, en litres.
   final double? volumeBouillie;
+
+  /// Regroupe les produits appliqués dans le même passage (mélange).
+  /// Vide pour un traitement seul : l'identifiant du traitement fait foi.
+  final String interventionId;
+
+  String get intervention => interventionId.isEmpty ? id : interventionId;
 
   /// Date à partir de laquelle la récolte est possible sur cette parcelle.
   DateTime? get recoltePossibleLe =>
@@ -212,6 +219,7 @@ class Traitement {
     'debut': heureDebut,
     'fin': heureFin,
     'bouillie': volumeBouillie,
+    'intervention': interventionId,
   };
 
   factory Traitement.fromJson(Map<String, dynamic> json) => Traitement(
@@ -235,6 +243,7 @@ class Traitement {
     heureDebut: json['debut'] as String? ?? '',
     heureFin: json['fin'] as String? ?? '',
     volumeBouillie: (json['bouillie'] as num?)?.toDouble(),
+    interventionId: json['intervention'] as String? ?? '',
   );
 }
 
@@ -266,6 +275,11 @@ class Journal {
     list.sort((a, b) => b.date.compareTo(a.date));
     return list;
   }
+
+  /// Produits appliqués dans le même passage (mélange).
+  List<Traitement> interventionDe(Traitement traitement) => traitements
+      .where((t) => t.intervention == traitement.intervention)
+      .toList();
 
   List<Traitement> get derniersTraitements {
     final list = [...traitements];

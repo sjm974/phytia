@@ -29,7 +29,8 @@ aucun compte, aucune donnée envoyée.
 - **Carnet de traitement** : parcelles (culture, **mode de conduite**, **position
   GPS** relevée au champ), traitements horodatés (**heures**, dose, **volume de
   bouillie** calculé depuis un volume/ha, stade BBCH, opérateur), **date de récolte possible calculée depuis
-  le DAR**, alerte si le produit a été retiré depuis, export **CSV** et **PDF**.
+  le DAR**, alerte si le produit a été retiré depuis, **mélanges** (une ligne par
+  produit, un identifiant d'intervention commun), export **CSV** et **PDF**.
 
 ## Démarrer
 

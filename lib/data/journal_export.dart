@@ -12,6 +12,7 @@ import 'models.dart';
 class JournalExport {
   static const List<String> columns = [
     'Date',
+    'Intervention',
     'Heure début',
     'Heure fin',
     'Parcelle',
@@ -50,6 +51,7 @@ class JournalExport {
       buffer.writeln(
         [
           frDate(t.date),
+          t.intervention,
           t.heureDebut,
           t.heureFin,
           names[t.parcelleId] ?? '',
