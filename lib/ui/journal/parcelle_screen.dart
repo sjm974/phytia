@@ -147,6 +147,8 @@ class ParcelleScreen extends StatelessWidget {
   ) async {
     final scope = PhytiaScope.of(context);
     final navigator = Navigator.of(context);
+    // Le contexte de la feuille est détruit au pop : on garde celui de l'écran.
+    final pageContext = context;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -170,6 +172,18 @@ class ParcelleScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.tonalIcon(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _ajouterAuMelange(pageContext, traitement);
+                  },
+                  icon: const Icon(Icons.add_circle_outline, size: 18),
+                  label: const Text('Ajouter un produit au mélange'),
                 ),
               ),
               const SizedBox(height: 14),
@@ -224,18 +238,6 @@ class ParcelleScreen extends StatelessWidget {
                     icon: const Icon(Icons.delete_outline, size: 20),
                   ),
                 ],
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    _ajouterAuMelange(context, traitement);
-                  },
-                  icon: const Icon(Icons.add_circle_outline, size: 18),
-                  label: const Text('Ajouter un produit au mélange'),
-                ),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -334,7 +336,12 @@ class ParcelleScreen extends StatelessWidget {
       ),
     );
 
-    if (confirme != true) return;
+    if (confirme != true) {
+      doseCtrl.dispose();
+      uniteCtrl.dispose();
+      darCtrl.dispose();
+      return;
+    }
     scope.journal.addTraitement(
       Traitement(
         id: scope.journal.newTraitementId(),
@@ -358,6 +365,17 @@ class ParcelleScreen extends StatelessWidget {
         heureDebut: base.heureDebut,
         heureFin: base.heureFin,
         volumeBouillie: base.volumeBouillie,
+      ),
+    );
+    doseCtrl.dispose();
+    uniteCtrl.dispose();
+    darCtrl.dispose();
+
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${produit.name} ajouté au mélange'),
+        duration: const Duration(seconds: 2),
       ),
     );
   }

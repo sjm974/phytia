@@ -247,6 +247,7 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
       heureDebut: _heureDebut,
       heureFin: _heureFin,
       volumeBouillie: _volumeTotal,
+      interventionId: widget.existant?.interventionId ?? '',
     );
 
     if (widget.existant == null) {
