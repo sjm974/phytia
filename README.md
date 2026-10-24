@@ -26,6 +26,9 @@ aucun compte, aucune donnée envoyée.
 - **Produits équivalents** : depuis une fiche, les substituts à composition
   déclarée identique (même substance, même dose), avec ceux réellement autorisés
   pour l'usage consulté et ceux qui ne le sont pas.
+- **Carnet de traitement** : parcelles, traitements horodatés (dose, stade BBCH,
+  opérateur), **date de récolte possible calculée depuis le DAR**, alerte si le
+  produit a été retiré depuis, export **CSV** et **PDF**.
 
 ## Démarrer
 
@@ -117,6 +120,9 @@ lib/
     dataset.dart         chargement gzippé + index mémoire (cultures, cibles, recherche)
     details.dart         conditions d'emploi / risques, chargés à la demande
     store.dart           stock, favoris, cultures récentes (JSON local)
+    journal_models.dart  parcelles, traitements, carnet (pur Dart, testable)
+    journal.dart         persistance et notifications du carnet
+    journal_export.dart  export CSV et PDF du carnet
     scope.dart           injection du catalogue et du stock dans l'arbre
   ui/
     home_screen.dart     accueil, recherche, mon stock, favoris
@@ -129,6 +135,7 @@ lib/
     compare_screen.dart  comparaison de deux produits (usages communs / propres)
     equivalents_screen.dart  substituts à composition identique
     about_screen.dart    source, avertissement, mentions légales
+  ui/journal/           parcelles, saisie de traitement, export (sous-écrans)
 tool/
   build_dataset.dart     CSV E-Phy → assets JSON gzippés
 test/

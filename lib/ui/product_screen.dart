@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../data/details.dart';
+import '../data/journal_models.dart';
 import '../data/models.dart';
 import '../data/scope.dart';
 import 'bbch_sheet.dart';
 import 'compare_screen.dart';
+import 'journal/parcelles_screen.dart';
+import 'journal/traitement_form.dart';
 import 'equivalents_screen.dart';
 import 'theme.dart';
 import 'widgets/common.dart';
@@ -122,6 +125,21 @@ class ProductScreen extends StatelessWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _enregistrerTraitement(
+                    context,
+                    product,
+                    highlight != null && highlight!.isNotEmpty
+                        ? highlight!.first
+                        : null,
+                  ),
+                  icon: const Icon(Icons.assignment_outlined, size: 18),
+                  label: const Text('Enregistrer un traitement'),
+                ),
+              ),
               if (highlight != null && highlight!.isNotEmpty) ...[
                 const SectionHeader(
                   'Votre usage',
@@ -167,6 +185,91 @@ class ProductScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Ajoute un traitement au carnet : choix de la parcelle puis formulaire
+/// prérempli avec le produit et l'usage consultés.
+Future<void> _enregistrerTraitement(
+  BuildContext context,
+  Product product,
+  Usage? usage,
+) async {
+  final scope = PhytiaScope.of(context);
+  final journal = scope.journal;
+
+  if (journal.parcelles.isEmpty) {
+    final creer = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Aucune parcelle'),
+        content: const Text(
+          'Créez d\'abord une parcelle : le traitement y sera rattaché et le '
+          'délai avant récolte calculé automatiquement.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Plus tard'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Créer une parcelle'),
+          ),
+        ],
+      ),
+    );
+    if (creer == true && context.mounted) {
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute<void>(builder: (_) => const ParcellesScreen()));
+    }
+    return;
+  }
+
+  final parcelle = await showModalBottomSheet<Parcelle>(
+    context: context,
+    showDragHandle: true,
+    backgroundColor: Colors.white,
+    builder: (context) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Sur quelle parcelle ?',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+          for (final p in journal.parcelles)
+            ListTile(
+              leading: const Icon(Icons.terrain, color: phytiaGreen),
+              title: Text(p.nom),
+              subtitle: Text(
+                p.culture.isEmpty ? 'Culture non précisée' : p.culture,
+              ),
+              trailing: const Icon(Icons.chevron_right, size: 18),
+              onTap: () => Navigator.of(context).pop(p),
+            ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    ),
+  );
+
+  if (parcelle == null || !context.mounted) return;
+  await Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => TraitementFormScreen(
+        parcelleId: parcelle.id,
+        produit: product,
+        usage: usage,
+      ),
+    ),
+  );
 }
 
 class _ProductHeader extends StatelessWidget {

@@ -4,6 +4,7 @@ import '../data/dataset.dart';
 import '../data/scope.dart';
 import 'about_screen.dart';
 import 'culture_screen.dart';
+import 'journal/parcelles_screen.dart';
 import 'search_screen.dart';
 import 'stock_screen.dart';
 import 'target_screen.dart';
@@ -26,9 +27,10 @@ class HomeScreen extends StatelessWidget {
       body: SafeArea(
         bottom: false,
         child: AnimatedBuilder(
-          animation: scope.store,
+          animation: Listenable.merge([scope.store, scope.journal]),
           builder: (context, _) {
             final store = scope.store;
+            final journal = scope.journal;
             final recent = store.recentCultures
                 .where((c) => data.hasCulture(c))
                 .toList();
@@ -79,6 +81,15 @@ class HomeScreen extends StatelessWidget {
                             ),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 12),
+                      _BigCard(
+                        icon: Icons.map_outlined,
+                        title: 'Mes parcelles',
+                        subtitle: journal.parcelles.isEmpty
+                            ? 'Enregistrer les traitements et les délais de récolte'
+                            : '${journal.parcelles.length} parcelle${journal.parcelles.length > 1 ? 's' : ''} · ${journal.traitementCount} traitement${journal.traitementCount > 1 ? 's' : ''}',
+                        onTap: () => _push(context, const ParcellesScreen()),
                       ),
                       if (recent.isNotEmpty) ...[
                         const SectionHeader(
@@ -223,8 +234,10 @@ class _BigCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.icon = Icons.agriculture_outlined,
   });
 
+  final IconData icon;
   final String title;
   final String subtitle;
   final VoidCallback onTap;
@@ -253,11 +266,7 @@ class _BigCard extends StatelessWidget {
                   color: const Color(0xFFE4F1E7),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Icon(
-                  Icons.agriculture_outlined,
-                  color: phytiaGreen,
-                  size: 28,
-                ),
+                child: Icon(icon, color: phytiaGreen, size: 28),
               ),
               const SizedBox(width: 14),
               Expanded(

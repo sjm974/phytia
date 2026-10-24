@@ -7,6 +7,8 @@
 - Comparateur, produits équivalents, fiche BBCH.
 - **P1 livré** : workflow GitHub Actions hebdomadaire + mise à jour à chaud dans
   l'application (manifeste, SHA-256, cache local, rechargement sans redémarrage).
+- **P2 livré** : parcelles, carnet de traitement, date de récolte calculée depuis
+  le DAR, export CSV et PDF.
 - Reste à faire côté toi : créer le dépôt, lancer le workflow, renseigner l'URL
   dans `lib/data/update_config.dart`, puis le premier lancement.
 
@@ -52,7 +54,7 @@ version de l'app est nécessaire pour chaque mise à jour.
 Écarté : reconstruire la base depuis les CSV sur le téléphone (38 Mo à parser,
 10-30 s et risque mémoire sur Android d'entrée de gamme).
 
-## P2 — Parcelles et carnet de traitement (≈ 2-3 jours)
+## P2 — Parcelles et carnet de traitement — LIVRÉ
 
 Ce qui transforme l'app d'annuaire en outil quotidien, et ce qu'E-Phy ne fait pas.
 

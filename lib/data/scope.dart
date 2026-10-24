@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'dataset.dart';
 import 'details.dart';
 import 'holder.dart';
+import 'journal.dart';
 import 'store.dart';
 import 'updater.dart';
 
@@ -14,6 +15,7 @@ class PhytiaScope extends InheritedWidget {
     required this.holder,
     required this.store,
     required this.details,
+    required this.journal,
     required this.updater,
     required super.child,
   });
@@ -25,6 +27,7 @@ class PhytiaScope extends InheritedWidget {
   final DatasetHolder holder;
   final UserStore store;
   final DetailsRepository details;
+  final JournalStore journal;
 
   /// Nul quand les mises à jour ne sont pas configurées.
   final DataUpdater? updater;
@@ -41,5 +44,6 @@ class PhytiaScope extends InheritedWidget {
       holder != oldWidget.holder ||
       store != oldWidget.store ||
       details != oldWidget.details ||
+      journal != oldWidget.journal ||
       updater != oldWidget.updater;
 }

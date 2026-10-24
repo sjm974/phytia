@@ -9,6 +9,7 @@ import 'data/data_files.dart';
 import 'data/dataset.dart';
 import 'data/details.dart';
 import 'data/holder.dart';
+import 'data/journal.dart';
 import 'data/scope.dart';
 import 'data/store.dart';
 import 'data/update_config.dart';
@@ -32,12 +33,14 @@ class _BootData {
     required this.holder,
     required this.store,
     required this.details,
+    required this.journal,
     required this.updater,
   });
 
   final DatasetHolder holder;
   final UserStore store;
   final DetailsRepository details;
+  final JournalStore journal;
   final DataUpdater? updater;
 }
 
@@ -65,6 +68,7 @@ class _PhytiaBootstrapState extends State<PhytiaBootstrap> {
     }
 
     final store = await UserStore.load();
+    final journal = await JournalStore.load();
     final details = DetailsRepository(files.details);
     final updater = (dataDir != null && isDataUpdateConfigured)
         ? DataUpdater(baseUrl: kDataReleaseBase, directory: dataDir)
@@ -74,6 +78,7 @@ class _PhytiaBootstrapState extends State<PhytiaBootstrap> {
       holder: DatasetHolder(dataset),
       store: store,
       details: details,
+      journal: journal,
       updater: updater,
     );
   }
@@ -105,6 +110,7 @@ class _PhytiaBootstrapState extends State<PhytiaBootstrap> {
             holder: boot.holder,
             store: boot.store,
             details: boot.details,
+            journal: boot.journal,
             updater: boot.updater,
             child: const PhytiaApp(),
           ),
