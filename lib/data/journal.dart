@@ -48,13 +48,13 @@ class JournalStore extends ChangeNotifier {
   Parcelle addParcelle({
     required String nom,
     String culture = '',
-    double? surfaceHa,
+    double? surfaceM2,
     String note = '',
   }) {
     final parcelle = _journal.addParcelle(
       nom: nom,
       culture: culture,
-      surfaceHa: surfaceHa,
+      surfaceM2: surfaceM2,
       note: note,
     );
     _persist();

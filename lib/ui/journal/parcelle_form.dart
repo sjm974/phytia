@@ -26,9 +26,9 @@ class _ParcelleFormScreenState extends State<ParcelleFormScreen> {
     final initial = widget.initial;
     _nom = TextEditingController(text: initial?.nom ?? '');
     _surface = TextEditingController(
-      text: initial?.surfaceHa == null
+      text: initial?.surfaceM2 == null
           ? ''
-          : initial!.surfaceHa!.toStringAsFixed(2).replaceAll('.', ','),
+          : initial!.surfaceM2!.toStringAsFixed(2).replaceAll('.', ','),
     );
     _note = TextEditingController(text: initial?.note ?? '');
     _culture = initial?.culture ?? '';
@@ -57,7 +57,7 @@ class _ParcelleFormScreenState extends State<ParcelleFormScreen> {
       scope.journal.addParcelle(
         nom: nom,
         culture: _culture,
-        surfaceHa: surface,
+        surfaceM2: surface,
         note: _note.text.trim(),
       );
     } else {
@@ -65,7 +65,7 @@ class _ParcelleFormScreenState extends State<ParcelleFormScreen> {
         widget.initial!.copyWith(
           nom: nom,
           culture: _culture,
-          surfaceHa: surface,
+          surfaceM2: surface,
           note: _note.text.trim(),
         ),
       );
@@ -146,8 +146,8 @@ class _ParcelleFormScreenState extends State<ParcelleFormScreen> {
             controller: _surface,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(
-              labelText: 'Surface (ha)',
-              suffixText: 'ha',
+              labelText: 'Surface (m²)',
+              suffixText: 'm²',
             ),
           ),
           const SizedBox(height: 14),

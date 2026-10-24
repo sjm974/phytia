@@ -91,7 +91,7 @@ class _ParcelleTile extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final details = [
       if (parcelle.culture.isNotEmpty) parcelle.culture,
-      if (parcelle.surfaceHa != null) formatHa(parcelle.surfaceHa),
+      if (parcelle.surfaceM2 != null) formatM2(parcelle.surfaceM2),
       '${traitements.length} traitement${traitements.length > 1 ? 's' : ''}',
     ].join(' · ');
 

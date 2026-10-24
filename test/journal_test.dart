@@ -6,7 +6,7 @@ import 'package:test/test.dart';
 
 void main() {
   Parcelle parcelle({String id = 'p1'}) =>
-      Parcelle(id: id, nom: 'Les Hauts', culture: 'Vigne', surfaceHa: 1.4);
+      Parcelle(id: id, nom: 'Les Hauts', culture: 'Vigne', surfaceM2: 1400);
 
   Traitement traitement({
     String id = 't1',
@@ -25,7 +25,7 @@ void main() {
     cible: cible,
     dose: '1,6',
     doseUnite: 'L/ha',
-    surfaceTraiteeHa: 1.4,
+    surfaceTraiteeM2: 1400,
     stadeBbch: '12-77',
     darJours: dar,
     operateur: 'SJM',
@@ -41,7 +41,7 @@ void main() {
       expect(restored.produit, 'OROCIDE');
       expect(restored.date, DateTime(2026, 5, 12));
       expect(restored.darJours, 21);
-      expect(restored.surfaceTraiteeHa, 1.4);
+      expect(restored.surfaceTraiteeM2, 1400);
     });
 
     test('date de récolte possible = date + DAR', () {
@@ -79,7 +79,7 @@ void main() {
       final p = journal.addParcelle(
         nom: 'Les Hauts',
         culture: 'Vigne',
-        surfaceHa: 1.4,
+        surfaceM2: 1400,
       );
       journal.addTraitement(traitement(id: 'a', parcelleId: p.id));
 
@@ -106,6 +106,8 @@ void main() {
         isTrue,
       );
       expect(csv.contains('02/06/2026'), isTrue);
+      expect(csv.contains('Surface (m²)'), isTrue);
+      expect(csv.contains(';1400;'), isTrue);
       expect(csv.contains('"Parcelle humide; ne pas traiter"'), isTrue);
     });
 
@@ -127,5 +129,32 @@ void main() {
 
   test('pdfSafe remplace les caractères hors Latin-1', () {
     expect(pdfSafe('Œufs d’acariens — test'), "OEufs d'acariens - test");
+  });
+
+  group('quantité à prélever', () {
+    test('dose par hectare ramenée à la surface', () {
+      expect(doseQuantite('1.6', 'L/ha', 200), '32 mL');
+      expect(doseQuantite('1,6', 'L/ha', 10000), '1,6 L');
+      expect(doseQuantite('2.5', 'kg/ha', 500), '125 g');
+      expect(doseQuantite('6', 'L/ha', 100), '60 mL');
+    });
+
+    test('dose déjà exprimée par 10 m²', () {
+      expect(doseQuantite('1.6', 'mL/10 m²', 200), '32 mL');
+      expect(doseQuantite('2', 'g/10 m²', 250), '50 g');
+    });
+
+    test('valeurs non calculables', () {
+      expect(doseQuantite('1.6', 'L/100 m²', 200), '');
+      expect(doseQuantite('', 'L/ha', 200), '');
+      expect(doseQuantite('1.6', 'L/ha', 0), '');
+      expect(doseQuantite('1.6', 'L', 200), '');
+    });
+  });
+
+  test('surface formatée en mètres carrés', () {
+    expect(formatM2(1400), '1 400 m²');
+    expect(formatM2(125.5), '125,5 m²');
+    expect(formatM2(null), '');
   });
 }

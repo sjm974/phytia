@@ -173,7 +173,7 @@ class ParcelleScreen extends StatelessWidget {
               const SizedBox(height: 14),
               _row('Cible', traitement.cible),
               _row('Dose', traitement.doseLabel),
-              _row('Surface traitée', formatHa(traitement.surfaceTraiteeHa)),
+              _row('Surface traitée', formatM2(traitement.surfaceTraiteeM2)),
               _row('Stade BBCH', traitement.stadeBbch),
               _row(
                 'Délai avant récolte',
@@ -265,7 +265,7 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final details = [
-      if (parcelle.surfaceHa != null) formatHa(parcelle.surfaceHa),
+      if (parcelle.surfaceM2 != null) formatM2(parcelle.surfaceM2),
       '$count traitement${count > 1 ? 's' : ''}',
     ].join(' · ');
 
@@ -368,7 +368,7 @@ class _TraitementTile extends StatelessWidget {
                 [
                   traitement.cible,
                   traitement.doseLabel,
-                  formatHa(traitement.surfaceTraiteeHa),
+                  formatM2(traitement.surfaceTraiteeM2),
                 ].where((e) => e.isNotEmpty).join(' · '),
                 style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
               ),

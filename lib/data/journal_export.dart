@@ -18,7 +18,7 @@ class JournalExport {
     'Cible',
     'Dose',
     'Unité',
-    'Surface (ha)',
+    'Surface (m²)',
     'Stade BBCH',
     'DAR (j)',
     'Récolte possible le',
@@ -49,7 +49,7 @@ class JournalExport {
           t.cible,
           t.dose,
           t.doseUnite,
-          _number(t.surfaceTraiteeHa),
+          _number(t.surfaceTraiteeM2),
           t.stadeBbch,
           t.darJours?.toString() ?? '',
           recolte == null ? '' : frDate(recolte),
@@ -79,7 +79,7 @@ class JournalExport {
         t.produit,
         t.cible,
         t.doseLabel,
-        _number(t.surfaceTraiteeHa),
+        _number(t.surfaceTraiteeM2),
         t.darJours?.toString() ?? '',
         recolte == null ? '' : frDate(recolte),
       ].map(pdfSafe).toList();
@@ -180,14 +180,68 @@ class JournalExport {
   }
 }
 
-/// Surface en hectares, formatée à la française.
-String formatHa(double? value) {
+/// Surface en mètres carrés, formatée à la française.
+String formatM2(double? value) {
   if (value == null) return '';
-  final text = value == value.roundToDouble()
-      ? value.round().toString()
-      : value.toStringAsFixed(2).replaceAll('.', ',');
-  return '$text ha';
+  if (value == value.roundToDouble()) {
+    return '${_groupThousands(value.round())} m²';
+  }
+  return '${value.toStringAsFixed(1).replaceAll('.', ',')} m²';
 }
+
+String _groupThousands(int value) {
+  final digits = value.toString();
+  final buffer = StringBuffer();
+  for (var i = 0; i < digits.length; i++) {
+    if (i > 0 && (digits.length - i) % 3 == 0) buffer.write(' ');
+    buffer.write(digits[i]);
+  }
+  return buffer.toString();
+}
+
+/// Quantité de produit à prélever pour une surface donnée, à partir d'une dose
+/// exprimée par hectare ou par 10 m². Renvoie une chaîne vide si l'unité n'est
+/// pas reconnue ou si les valeurs sont inutilisables.
+String doseQuantite(String dose, String unite, double surfaceM2) {
+  final value = double.tryParse(dose.replaceAll(',', '.').trim());
+  if (value == null || value <= 0 || surfaceM2 <= 0) return '';
+
+  final unit = unite.toLowerCase().replaceAll('²', '2').replaceAll(' ', '');
+  final perHectare = unit.contains('/ha');
+  final perTenSquareMetres = unit.contains('/10m');
+  if (!perHectare && !perTenSquareMetres) return '';
+
+  final factor = perHectare ? surfaceM2 / 10000 : surfaceM2 / 10;
+  final quantity = value * factor;
+  final numerator = unit.split('/').first;
+
+  switch (numerator) {
+    case 'l':
+      return _formatVolume(quantity);
+    case 'ml':
+      return _formatVolume(quantity / 1000);
+    case 'kg':
+      return _formatMass(quantity);
+    case 'g':
+      return _formatMass(quantity / 1000);
+  }
+  return '';
+}
+
+String _formatVolume(double litres) {
+  if (litres < 0.001) return '';
+  if (litres < 1) return '${(litres * 1000).round()} mL';
+  return '${_pretty(litres.toStringAsFixed(2))} L';
+}
+
+String _formatMass(double kilograms) {
+  if (kilograms < 0.001) return '';
+  if (kilograms < 1) return '${(kilograms * 1000).round()} g';
+  return '${_pretty(kilograms.toStringAsFixed(2))} kg';
+}
+
+String _pretty(String value) =>
+    value.replaceAll(RegExp(r'\.?0+$'), '').replaceAll('.', ',');
 
 /// Date au format jj/mm/aaaa.
 String frDate(DateTime date) {

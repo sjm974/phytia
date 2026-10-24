@@ -68,6 +68,13 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
     _note = TextEditingController(text: existant?.note ?? '');
   }
 
+  /// Quantité à prélever d'après la dose et la surface traitée.
+  String get _quantite {
+    final surface = double.tryParse(_surface.text.replaceAll(',', '.').trim());
+    if (surface == null) return '';
+    return doseQuantite(_dose.text, _unite.text, surface);
+  }
+
   static String _bbchDe(Usage? usage) {
     if (usage == null) return '';
     final min = usage.bbchMin;
@@ -85,10 +92,10 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
     final scope = PhytiaScope.of(context);
     final parcelle = scope.journal.parcelle(widget.parcelleId);
     _culture = parcelle?.culture ?? '';
-    _surfaceParcelle = parcelle?.surfaceHa;
-    _surface.text = widget.existant?.surfaceTraiteeHa == null
+    _surfaceParcelle = parcelle?.surfaceM2;
+    _surface.text = widget.existant?.surfaceTraiteeM2 == null
         ? (_surfaceParcelle?.toStringAsFixed(2).replaceAll('.', ',') ?? '')
-        : widget.existant!.surfaceTraiteeHa!
+        : widget.existant!.surfaceTraiteeM2!
               .toStringAsFixed(2)
               .replaceAll('.', ',');
   }
@@ -168,7 +175,7 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
       cible: _cible.text.trim(),
       dose: _dose.text.trim(),
       doseUnite: _unite.text.trim(),
-      surfaceTraiteeHa: double.tryParse(_surface.text.replaceAll(',', '.')),
+      surfaceTraiteeM2: double.tryParse(_surface.text.replaceAll(',', '.')),
       stadeBbch: _bbch.text.trim(),
       darJours: int.tryParse(_dar.text.trim()),
       operateur: _operateur.text.trim(),
@@ -251,15 +258,17 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
                     decimal: true,
                   ),
                   decoration: const InputDecoration(labelText: 'Dose'),
+                  onChanged: (_) => setState(() {}),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: TextField(
                   controller: _unite,
+                  onChanged: (_) => setState(() {}),
                   decoration: const InputDecoration(
                     labelText: 'Unité',
-                    hintText: 'L/ha',
+                    hintText: 'L/ha ou mL/10 m²',
                   ),
                 ),
               ),
@@ -271,12 +280,13 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
               Expanded(
                 child: TextField(
                   controller: _surface,
+                  onChanged: (_) => setState(() {}),
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
                   decoration: const InputDecoration(
-                    labelText: 'Surface traitée',
-                    suffixText: 'ha',
+                    labelText: 'Surface traitée (m²)',
+                    suffixText: 'm²',
                   ),
                 ),
               ),
@@ -292,6 +302,36 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
               ),
             ],
           ),
+          if (_quantite.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE4F1E7),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.calculate_outlined,
+                    size: 18,
+                    color: phytiaGreen,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Quantité à prélever : $_quantite',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: phytiaDark,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 14),
           Row(
             children: [

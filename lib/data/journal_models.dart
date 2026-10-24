@@ -6,26 +6,26 @@ class Parcelle {
     required this.id,
     required this.nom,
     this.culture = '',
-    this.surfaceHa,
+    this.surfaceM2,
     this.note = '',
   });
 
   final String id;
   final String nom;
   final String culture;
-  final double? surfaceHa;
+  final double? surfaceM2;
   final String note;
 
   Parcelle copyWith({
     String? nom,
     String? culture,
-    double? surfaceHa,
+    double? surfaceM2,
     String? note,
   }) => Parcelle(
     id: id,
     nom: nom ?? this.nom,
     culture: culture ?? this.culture,
-    surfaceHa: surfaceHa ?? this.surfaceHa,
+    surfaceM2: surfaceM2 ?? this.surfaceM2,
     note: note ?? this.note,
   );
 
@@ -33,7 +33,7 @@ class Parcelle {
     'id': id,
     'nom': nom,
     'culture': culture,
-    'surface': surfaceHa,
+    'surface': surfaceM2,
     'note': note,
   };
 
@@ -41,7 +41,7 @@ class Parcelle {
     id: json['id'] as String? ?? '',
     nom: json['nom'] as String? ?? '',
     culture: json['culture'] as String? ?? '',
-    surfaceHa: (json['surface'] as num?)?.toDouble(),
+    surfaceM2: (json['surface'] as num?)?.toDouble(),
     note: json['note'] as String? ?? '',
   );
 }
@@ -59,7 +59,7 @@ class Traitement {
     this.cible = '',
     this.dose = '',
     this.doseUnite = '',
-    this.surfaceTraiteeHa,
+    this.surfaceTraiteeM2,
     this.stadeBbch = '',
     this.darJours,
     this.operateur = '',
@@ -75,7 +75,7 @@ class Traitement {
   final String cible;
   final String dose;
   final String doseUnite;
-  final double? surfaceTraiteeHa;
+  final double? surfaceTraiteeM2;
   final String stadeBbch;
   final int? darJours;
   final String operateur;
@@ -106,7 +106,7 @@ class Traitement {
     'cible': cible,
     'dose': dose,
     'unite': doseUnite,
-    'surface': surfaceTraiteeHa,
+    'surface': surfaceTraiteeM2,
     'bbch': stadeBbch,
     'dar': darJours,
     'operateur': operateur,
@@ -123,7 +123,7 @@ class Traitement {
     cible: json['cible'] as String? ?? '',
     dose: json['dose'] as String? ?? '',
     doseUnite: json['unite'] as String? ?? '',
-    surfaceTraiteeHa: (json['surface'] as num?)?.toDouble(),
+    surfaceTraiteeM2: (json['surface'] as num?)?.toDouble(),
     stadeBbch: json['bbch'] as String? ?? '',
     darJours: (json['dar'] as num?)?.toInt(),
     operateur: json['operateur'] as String? ?? '',
@@ -163,14 +163,14 @@ class Journal {
   Parcelle addParcelle({
     required String nom,
     String culture = '',
-    double? surfaceHa,
+    double? surfaceM2,
     String note = '',
   }) {
     final parcelle = Parcelle(
       id: newId(),
       nom: nom.trim(),
       culture: culture,
-      surfaceHa: surfaceHa,
+      surfaceM2: surfaceM2,
       note: note,
     );
     parcelles.add(parcelle);
