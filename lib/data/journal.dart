@@ -50,12 +50,18 @@ class JournalStore extends ChangeNotifier {
     String culture = '',
     double? surfaceM2,
     String note = '',
+    String modeConduite = '',
+    double? latitude,
+    double? longitude,
   }) {
     final parcelle = _journal.addParcelle(
       nom: nom,
       culture: culture,
       surfaceM2: surfaceM2,
       note: note,
+      modeConduite: modeConduite,
+      latitude: latitude,
+      longitude: longitude,
     );
     _persist();
     return parcelle;

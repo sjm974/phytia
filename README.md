@@ -26,9 +26,10 @@ aucun compte, aucune donnée envoyée.
 - **Produits équivalents** : depuis une fiche, les substituts à composition
   déclarée identique (même substance, même dose), avec ceux réellement autorisés
   pour l'usage consulté et ceux qui ne le sont pas.
-- **Carnet de traitement** : parcelles, traitements horodatés (dose, stade BBCH,
-  opérateur), **date de récolte possible calculée depuis le DAR**, alerte si le
-  produit a été retiré depuis, export **CSV** et **PDF**.
+- **Carnet de traitement** : parcelles (culture, **mode de conduite**, **position
+  GPS** relevée au champ), traitements horodatés (**heures**, dose, **volume de
+  bouillie**, stade BBCH, opérateur), **date de récolte possible calculée depuis
+  le DAR**, alerte si le produit a été retiré depuis, export **CSV** et **PDF**.
 
 ## Démarrer
 

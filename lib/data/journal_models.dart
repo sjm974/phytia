@@ -1,5 +1,23 @@
 import 'dart:math';
 
+/// Modes de conduite reconnus par le registre phytosanitaire.
+const String modeBiologique = 'biologique';
+const String modeConversion = 'conversion';
+const String modeConventionnel = 'conventionnel';
+
+String libelleMode(String mode) {
+  switch (mode) {
+    case modeBiologique:
+      return 'Agriculture biologique';
+    case modeConversion:
+      return 'Conversion bio';
+    case modeConventionnel:
+      return 'Conventionnel';
+    default:
+      return '';
+  }
+}
+
 /// Une parcelle de l'exploitation.
 class Parcelle {
   const Parcelle({
@@ -8,6 +26,9 @@ class Parcelle {
     this.culture = '',
     this.surfaceM2,
     this.note = '',
+    this.modeConduite = '',
+    this.latitude,
+    this.longitude,
   });
 
   final String id;
@@ -16,17 +37,40 @@ class Parcelle {
   final double? surfaceM2;
   final String note;
 
+  /// biologique, conversion ou conventionnel (vide = non renseigné).
+  final String modeConduite;
+
+  /// Position relevée au champ, si l'utilisateur l'a enregistrée.
+  final double? latitude;
+  final double? longitude;
+
+  bool get aPosition => latitude != null && longitude != null;
+
+  String get positionLabel {
+    if (!aPosition) return '';
+    final lat = latitude!.toStringAsFixed(6);
+    final lon = longitude!.toStringAsFixed(6);
+    return '$lat, $lon';
+  }
+
   Parcelle copyWith({
     String? nom,
     String? culture,
     double? surfaceM2,
     String? note,
+    String? modeConduite,
+    double? latitude,
+    double? longitude,
+    bool effacerPosition = false,
   }) => Parcelle(
     id: id,
     nom: nom ?? this.nom,
     culture: culture ?? this.culture,
     surfaceM2: surfaceM2 ?? this.surfaceM2,
     note: note ?? this.note,
+    modeConduite: modeConduite ?? this.modeConduite,
+    latitude: effacerPosition ? null : (latitude ?? this.latitude),
+    longitude: effacerPosition ? null : (longitude ?? this.longitude),
   );
 
   Map<String, dynamic> toJson() => {
@@ -35,6 +79,9 @@ class Parcelle {
     'culture': culture,
     'surface': surfaceM2,
     'note': note,
+    'mode': modeConduite,
+    'lat': latitude,
+    'lon': longitude,
   };
 
   factory Parcelle.fromJson(Map<String, dynamic> json) => Parcelle(
@@ -43,6 +90,9 @@ class Parcelle {
     culture: json['culture'] as String? ?? '',
     surfaceM2: (json['surface'] as num?)?.toDouble(),
     note: json['note'] as String? ?? '',
+    modeConduite: json['mode'] as String? ?? '',
+    latitude: (json['lat'] as num?)?.toDouble(),
+    longitude: (json['lon'] as num?)?.toDouble(),
   );
 }
 
@@ -64,6 +114,12 @@ class Traitement {
     this.darJours,
     this.operateur = '',
     this.note = '',
+    this.modeConduite = '',
+    this.latitude,
+    this.longitude,
+    this.heureDebut = '',
+    this.heureFin = '',
+    this.volumeBouillie,
   });
 
   final String id;
@@ -81,6 +137,20 @@ class Traitement {
   final String operateur;
   final String note;
 
+  /// Mode de conduite au moment du traitement.
+  final String modeConduite;
+
+  /// Position de la parcelle, recopiée pour que le registre reste lisible seul.
+  final double? latitude;
+  final double? longitude;
+
+  /// Heures de début et de fin, au format HH:mm.
+  final String heureDebut;
+  final String heureFin;
+
+  /// Volume total de bouillie préparé pour cette parcelle, en litres.
+  final double? volumeBouillie;
+
   /// Date à partir de laquelle la récolte est possible sur cette parcelle.
   DateTime? get recoltePossibleLe =>
       darJours == null ? null : date.add(Duration(days: darJours!));
@@ -94,6 +164,31 @@ class Traitement {
   String get doseLabel {
     if (dose.isEmpty) return '';
     return doseUnite.isEmpty ? dose : '$dose $doseUnite';
+  }
+
+  String get heureLabel {
+    if (heureDebut.isEmpty && heureFin.isEmpty) return '';
+    if (heureFin.isEmpty) return heureDebut;
+    if (heureDebut.isEmpty) return heureFin;
+    return '$heureDebut – $heureFin';
+  }
+
+  String get volumeLabel =>
+      volumeBouillie == null ? '' : '${formatLitres(volumeBouillie!)} L';
+
+  /// Équivalent en litres par hectare, pour recouper avec la calibration.
+  double? get volumeParHectare {
+    final volume = volumeBouillie;
+    final surface = surfaceTraiteeM2;
+    if (volume == null || surface == null || surface <= 0) return null;
+    return volume / surface * 10000;
+  }
+
+  String get positionLabel {
+    if (latitude == null || longitude == null) return '';
+    final lat = latitude!.toStringAsFixed(6);
+    final lon = longitude!.toStringAsFixed(6);
+    return '$lat, $lon';
   }
 
   Map<String, dynamic> toJson() => {
@@ -111,6 +206,12 @@ class Traitement {
     'dar': darJours,
     'operateur': operateur,
     'note': note,
+    'mode': modeConduite,
+    'lat': latitude,
+    'lon': longitude,
+    'debut': heureDebut,
+    'fin': heureFin,
+    'bouillie': volumeBouillie,
   };
 
   factory Traitement.fromJson(Map<String, dynamic> json) => Traitement(
@@ -128,7 +229,19 @@ class Traitement {
     darJours: (json['dar'] as num?)?.toInt(),
     operateur: json['operateur'] as String? ?? '',
     note: json['note'] as String? ?? '',
+    modeConduite: json['mode'] as String? ?? '',
+    latitude: (json['lat'] as num?)?.toDouble(),
+    longitude: (json['lon'] as num?)?.toDouble(),
+    heureDebut: json['debut'] as String? ?? '',
+    heureFin: json['fin'] as String? ?? '',
+    volumeBouillie: (json['bouillie'] as num?)?.toDouble(),
   );
+}
+
+/// Litres formatés à la française (2 L, 2,5 L).
+String formatLitres(double value) {
+  if (value == value.roundToDouble()) return value.round().toString();
+  return value.toStringAsFixed(2).replaceAll('.', ',');
 }
 
 /// Le carnet lui-même : parcelles et traitements, sans dépendance à Flutter.
@@ -165,6 +278,9 @@ class Journal {
     String culture = '',
     double? surfaceM2,
     String note = '',
+    String modeConduite = '',
+    double? latitude,
+    double? longitude,
   }) {
     final parcelle = Parcelle(
       id: newId(),
@@ -172,6 +288,9 @@ class Journal {
       culture: culture,
       surfaceM2: surfaceM2,
       note: note,
+      modeConduite: modeConduite,
+      latitude: latitude,
+      longitude: longitude,
     );
     parcelles.add(parcelle);
     return parcelle;

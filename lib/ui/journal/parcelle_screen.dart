@@ -175,6 +175,10 @@ class ParcelleScreen extends StatelessWidget {
               _row('Dose', traitement.doseLabel),
               _row('Surface traitée', formatM2(traitement.surfaceTraiteeM2)),
               _row('Quantité à prélever', JournalExport.quantite(traitement)),
+              _row('Volume de bouillie', _volume(traitement)),
+              _row('Heures', traitement.heureLabel),
+              _row('Mode de conduite', libelleMode(traitement.modeConduite)),
+              _row('Position', traitement.positionLabel),
               _row('Stade BBCH', traitement.stadeBbch),
               _row(
                 'Délai avant récolte',
@@ -224,6 +228,14 @@ class ParcelleScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _volume(Traitement traitement) {
+    final volume = traitement.volumeLabel;
+    if (volume.isEmpty) return '';
+    final perHa = traitement.volumeParHectare;
+    if (perHa == null) return volume;
+    return '$volume (soit ${formatLitres(perHa)} L/ha)';
   }
 
   Widget _row(String label, String value) {
@@ -294,6 +306,22 @@ class _Header extends StatelessWidget {
             details,
             style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
           ),
+          if (parcelle.modeConduite.isNotEmpty || parcelle.aPosition) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                if (parcelle.modeConduite.isNotEmpty)
+                  Pill(
+                    libelleMode(parcelle.modeConduite),
+                    icon: Icons.eco_outlined,
+                  ),
+                if (parcelle.aPosition)
+                  const Pill('Position GPS', icon: Icons.my_location),
+              ],
+            ),
+          ],
           if (parcelle.note.isNotEmpty) ...[
             const SizedBox(height: 10),
             Text(

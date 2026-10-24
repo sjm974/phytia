@@ -30,6 +30,12 @@ void main() {
     darJours: dar,
     operateur: 'SJM',
     note: note,
+    modeConduite: modeConventionnel,
+    latitude: 45.123456,
+    longitude: 5.654321,
+    heureDebut: '08:30',
+    heureFin: '10:15',
+    volumeBouillie: 4,
   );
 
   group('modèle', () {
@@ -42,6 +48,21 @@ void main() {
       expect(restored.date, DateTime(2026, 5, 12));
       expect(restored.darJours, 21);
       expect(restored.surfaceTraiteeM2, 1400);
+      expect(restored.heureDebut, '08:30');
+      expect(restored.heureFin, '10:15');
+      expect(restored.volumeBouillie, 4);
+      expect(restored.modeConduite, modeConventionnel);
+      expect(restored.latitude, 45.123456);
+      expect(restored.longitude, 5.654321);
+    });
+
+    test('libellés des nouveaux champs', () {
+      final t = traitement();
+      expect(t.heureLabel, '08:30 – 10:15');
+      expect(t.volumeLabel, '4 L');
+      expect(t.volumeParHectare, closeTo(28.57, 0.01));
+      expect(libelleMode(modeBiologique), 'Agriculture biologique');
+      expect(libelleMode(''), '');
     });
 
     test('date de récolte possible = date + DAR', () {
@@ -100,11 +121,19 @@ void main() {
         traitements: [traitement(note: 'Parcelle humide; ne pas traiter')],
       );
 
-      expect(csv.startsWith('\uFEFFDate;Parcelle;Culture'), isTrue);
       expect(
-        csv.contains('12/05/2026;Les Hauts;Vigne;OROCIDE;2180631;Mildiou(s)'),
+        csv.startsWith('\uFEFFDate;Heure début;Heure fin;Parcelle;Culture'),
         isTrue,
       );
+      expect(
+        csv.contains(
+          '12/05/2026;08:30;10:15;Les Hauts;Vigne;OROCIDE;2180631;Mildiou(s)',
+        ),
+        isTrue,
+      );
+      expect(csv.contains('Volume bouillie (L)'), isTrue);
+      expect(csv.contains('conventionnel'), isTrue);
+      expect(csv.contains('45.123456'), isTrue);
       expect(csv.contains('02/06/2026'), isTrue);
       expect(csv.contains('Surface (m²)'), isTrue);
       expect(csv.contains('Quantité'), isTrue);

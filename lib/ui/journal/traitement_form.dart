@@ -35,11 +35,17 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
   late final TextEditingController _dar;
   late final TextEditingController _operateur;
   late final TextEditingController _note;
+  late final TextEditingController _volume;
 
   late DateTime _date;
   String _amm = '';
   String _nomProduit = '';
   String _culture = '';
+  String _mode = '';
+  String _heureDebut = '';
+  String _heureFin = '';
+  double? _latitude;
+  double? _longitude;
   double? _surfaceParcelle;
   bool _initialise = false;
 
@@ -50,6 +56,11 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
     _date = existant?.date ?? DateTime.now();
     _amm = existant?.amm ?? widget.produit?.amm ?? '';
     _nomProduit = existant?.produit ?? widget.produit?.name ?? '';
+    _mode = existant?.modeConduite ?? '';
+    _latitude = existant?.latitude;
+    _longitude = existant?.longitude;
+    _heureDebut = existant?.heureDebut ?? '';
+    _heureFin = existant?.heureFin ?? '';
 
     final usage = widget.usage;
     _cible = TextEditingController(
@@ -66,6 +77,11 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
     );
     _operateur = TextEditingController(text: existant?.operateur ?? '');
     _note = TextEditingController(text: existant?.note ?? '');
+    _volume = TextEditingController(
+      text: existant?.volumeBouillie == null
+          ? ''
+          : formatLitres(existant!.volumeBouillie!),
+    );
   }
 
   /// Quantité à prélever d'après la dose et la surface traitée.
@@ -73,6 +89,15 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
     final surface = double.tryParse(_surface.text.replaceAll(',', '.').trim());
     if (surface == null) return '';
     return doseQuantite(_dose.text, _unite.text, surface);
+  }
+
+  /// Équivalent du volume de bouillie en L/ha.
+  String get _volumeHa {
+    final volume = double.tryParse(_volume.text.replaceAll(',', '.').trim());
+    final surface = double.tryParse(_surface.text.replaceAll(',', '.').trim());
+    if (volume == null || surface == null || surface <= 0) return '';
+    final perHa = volume / surface * 10000;
+    return 'soit ${formatLitres(perHa)} L/ha';
   }
 
   static String _bbchDe(Usage? usage) {
@@ -93,11 +118,14 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
     final parcelle = scope.journal.parcelle(widget.parcelleId);
     _culture = parcelle?.culture ?? '';
     _surfaceParcelle = parcelle?.surfaceM2;
+    if (_mode.isEmpty) _mode = parcelle?.modeConduite ?? '';
+    if (_latitude == null) {
+      _latitude = parcelle?.latitude;
+      _longitude = parcelle?.longitude;
+    }
     _surface.text = widget.existant?.surfaceTraiteeM2 == null
-        ? (_surfaceParcelle?.toStringAsFixed(2).replaceAll('.', ',') ?? '')
-        : widget.existant!.surfaceTraiteeM2!
-              .toStringAsFixed(2)
-              .replaceAll('.', ',');
+        ? (_surfaceParcelle?.toStringAsFixed(0) ?? '')
+        : widget.existant!.surfaceTraiteeM2!.toStringAsFixed(0);
   }
 
   @override
@@ -111,6 +139,7 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
       _dar,
       _operateur,
       _note,
+      _volume,
     ]) {
       controller.dispose();
     }
@@ -155,6 +184,27 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
     });
   }
 
+  Future<void> _choisirHeure({required bool debut}) async {
+    final actuel = debut ? _heureDebut : _heureFin;
+    final initial = actuel.contains(':')
+        ? TimeOfDay(
+            hour: int.parse(actuel.split(':').first),
+            minute: int.parse(actuel.split(':').last),
+          )
+        : TimeOfDay.now();
+    final choix = await showTimePicker(context: context, initialTime: initial);
+    if (choix == null) return;
+    final heures = choix.hour.toString().padLeft(2, '0');
+    final minutes = choix.minute.toString().padLeft(2, '0');
+    setState(() {
+      if (debut) {
+        _heureDebut = '$heures:$minutes';
+      } else {
+        _heureFin = '$heures:$minutes';
+      }
+    });
+  }
+
   Future<void> _enregistrer() async {
     if (_nomProduit.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -180,6 +230,12 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
       darJours: int.tryParse(_dar.text.trim()),
       operateur: _operateur.text.trim(),
       note: _note.text.trim(),
+      modeConduite: _mode,
+      latitude: _latitude,
+      longitude: _longitude,
+      heureDebut: _heureDebut,
+      heureFin: _heureFin,
+      volumeBouillie: double.tryParse(_volume.text.replaceAll(',', '.')),
     );
 
     if (widget.existant == null) {
@@ -229,7 +285,29 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
               if (picked != null) setState(() => _date = picked);
             },
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _Tile(
+                  icon: Icons.play_arrow_outlined,
+                  label: 'Début',
+                  value: _heureDebut.isEmpty ? '--:--' : _heureDebut,
+                  onTap: () => _choisirHeure(debut: true),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _Tile(
+                  icon: Icons.stop_outlined,
+                  label: 'Fin',
+                  value: _heureFin.isEmpty ? '--:--' : _heureFin,
+                  onTap: () => _choisirHeure(debut: false),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
           _Tile(
             icon: Icons.science_outlined,
             label: 'Produit',
@@ -304,34 +382,22 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
           ),
           if (_quantite.isNotEmpty) ...[
             const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE4F1E7),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.calculate_outlined,
-                    size: 18,
-                    color: phytiaGreen,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Quantité à prélever : $_quantite',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: phytiaDark,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            _Info(
+              icon: Icons.calculate_outlined,
+              text: 'Quantité à prélever : $_quantite',
             ),
           ],
+          const SizedBox(height: 14),
+          TextField(
+            controller: _volume,
+            onChanged: (_) => setState(() {}),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: InputDecoration(
+              labelText: 'Volume de bouillie (L)',
+              suffixText: 'L',
+              helperText: _volumeHa.isEmpty ? null : _volumeHa,
+            ),
+          ),
           const SizedBox(height: 14),
           Row(
             children: [
@@ -367,6 +433,21 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
               hintText: 'Conditions, matériel, observations…',
             ),
           ),
+          const SizedBox(height: 16),
+          _Info(
+            icon: Icons.eco_outlined,
+            text: _mode.isEmpty
+                ? 'Mode de conduite non renseigné sur la parcelle.'
+                : 'Mode de conduite : ${libelleMode(_mode)}',
+          ),
+          if (_latitude != null && _longitude != null) ...[
+            const SizedBox(height: 8),
+            _Info(
+              icon: Icons.my_location,
+              text:
+                  'Position : ${_latitude!.toStringAsFixed(6)}, ${_longitude!.toStringAsFixed(6)}',
+            ),
+          ],
           const SizedBox(height: 22),
           FilledButton.icon(
             onPressed: _enregistrer,
@@ -382,6 +463,40 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
               fontSize: 11,
               height: 1.4,
               color: scheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Info extends StatelessWidget {
+  const _Info({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE4F1E7),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: phytiaGreen),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+                color: phytiaDark,
+              ),
             ),
           ),
         ],

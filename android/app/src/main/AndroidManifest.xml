@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Uniquement pour la mise à jour du catalogue depuis GitHub. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Position de la parcelle relevée au champ. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <application
         android:label="Phytia"
         android:name="${applicationName}"
