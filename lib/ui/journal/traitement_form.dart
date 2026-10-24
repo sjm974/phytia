@@ -35,7 +35,7 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
   late final TextEditingController _dar;
   late final TextEditingController _operateur;
   late final TextEditingController _note;
-  late final TextEditingController _volume;
+  late final TextEditingController _volumeHa;
 
   late DateTime _date;
   String _amm = '';
@@ -77,27 +77,33 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
     );
     _operateur = TextEditingController(text: existant?.operateur ?? '');
     _note = TextEditingController(text: existant?.note ?? '');
-    _volume = TextEditingController(
-      text: existant?.volumeBouillie == null
-          ? ''
-          : formatLitres(existant!.volumeBouillie!),
-    );
+    _volumeHa = TextEditingController();
   }
 
   /// Quantité à prélever d'après la dose et la surface traitée.
   String get _quantite {
     final surface = double.tryParse(_surface.text.replaceAll(',', '.').trim());
     if (surface == null) return '';
-    return doseQuantite(_dose.text, _unite.text, surface);
+    return doseQuantite(
+      _dose.text,
+      _unite.text,
+      surface,
+      volumeBouillie: _volumeTotal,
+    );
   }
 
-  /// Équivalent du volume de bouillie en L/ha.
-  String get _volumeHa {
-    final volume = double.tryParse(_volume.text.replaceAll(',', '.').trim());
+  /// Volume total de bouillie pour la surface traitée, en litres.
+  double? get _volumeTotal {
+    final perHa = double.tryParse(_volumeHa.text.replaceAll(',', '.').trim());
     final surface = double.tryParse(_surface.text.replaceAll(',', '.').trim());
-    if (volume == null || surface == null || surface <= 0) return '';
-    final perHa = volume / surface * 10000;
-    return 'soit ${formatLitres(perHa)} L/ha';
+    if (perHa == null || surface == null || surface <= 0) return null;
+    return volumeTotalLitres(perHa, surface);
+  }
+
+  String get _volumeTotalLabel {
+    final total = _volumeTotal;
+    if (total == null) return '';
+    return '${formatLitres(total)} L de bouillie au total';
   }
 
   static String _bbchDe(Usage? usage) {
@@ -126,6 +132,11 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
     _surface.text = widget.existant?.surfaceTraiteeM2 == null
         ? (_surfaceParcelle?.toStringAsFixed(0) ?? '')
         : widget.existant!.surfaceTraiteeM2!.toStringAsFixed(0);
+    final total = widget.existant?.volumeBouillie;
+    final surface = double.tryParse(_surface.text.replaceAll(',', '.'));
+    if (total != null && surface != null && surface > 0) {
+      _volumeHa.text = formatLitres(total / surface * 10000);
+    }
   }
 
   @override
@@ -139,7 +150,7 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
       _dar,
       _operateur,
       _note,
-      _volume,
+      _volumeHa,
     ]) {
       controller.dispose();
     }
@@ -235,7 +246,7 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
       longitude: _longitude,
       heureDebut: _heureDebut,
       heureFin: _heureFin,
-      volumeBouillie: double.tryParse(_volume.text.replaceAll(',', '.')),
+      volumeBouillie: _volumeTotal,
     );
 
     if (widget.existant == null) {
@@ -389,15 +400,28 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
           ],
           const SizedBox(height: 14),
           TextField(
-            controller: _volume,
+            controller: _volumeHa,
             onChanged: (_) => setState(() {}),
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
-              labelText: 'Volume de bouillie (L)',
-              suffixText: 'L',
-              helperText: _volumeHa.isEmpty ? null : _volumeHa,
+              labelText: 'Volume de bouillie (L/ha)',
+              suffixText: 'L/ha',
+              helperText: _volumeTotalLabel.isEmpty ? null : _volumeTotalLabel,
             ),
           ),
+          if (_volumeHa.text.trim().isEmpty && _culture.isNotEmpty)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => setState(
+                  () => _volumeHa.text = volumeHaIndicatif(_culture).toString(),
+                ),
+                icon: const Icon(Icons.auto_fix_high, size: 16),
+                label: Text(
+                  'Utiliser ${volumeHaIndicatif(_culture)} L/ha (ordre de grandeur)',
+                ),
+              ),
+            ),
           const SizedBox(height: 14),
           Row(
             children: [

@@ -175,6 +175,25 @@ void main() {
       expect(doseQuantite('2', 'g/10 m²', 250), '50 g');
     });
 
+    test('dose par hectolitre de bouillie', () {
+      expect(doseQuantite('2', 'L/hL', 1400, volumeBouillie: 400), '8 L');
+      expect(doseQuantite('0.5', 'L/hL', 1400, volumeBouillie: 300), '1,5 L');
+      expect(doseQuantite('2', 'L/hL', 1400), '');
+    });
+
+    test('dose au mètre carré', () {
+      expect(doseQuantite('10', 'g/m²', 200), '2 kg');
+      expect(doseQuantite('2', 'mL/m²', 50), '100 mL');
+    });
+
+    test('volume de bouillie total et ordre de grandeur', () {
+      expect(volumeTotalLitres(200, 1400), 28);
+      expect(volumeHaIndicatif('Vigne'), 500);
+      expect(volumeHaIndicatif('Blé tendre'), 150);
+      expect(volumeHaIndicatif('Tomate'), 300);
+      expect(volumeHaIndicatif(''), 200);
+    });
+
     test('valeurs non calculables', () {
       expect(doseQuantite('1.6', 'L/100 m²', 200), '');
       expect(doseQuantite('', 'L/ha', 200), '');

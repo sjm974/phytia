@@ -4,6 +4,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import 'journal_models.dart';
+import 'models.dart';
 
 /// Génère le carnet de traitement au format CSV et PDF.
 /// Aucune dépendance native : les octets sont produits ici, l'écriture du
@@ -80,6 +81,7 @@ class JournalExport {
     traitement.dose,
     traitement.doseUnite,
     traitement.surfaceTraiteeM2 ?? 0,
+    volumeBouillie: traitement.volumeBouillie,
   );
 
   /// PDF paysage : une ligne par traitement, tri par date.
@@ -210,6 +212,47 @@ class JournalExport {
   }
 }
 
+/// Volume de bouillie courant pour une culture, en litres par hectare.
+/// Ordre de grandeur de départ, à remplacer par la calibration du
+/// pulvérisateur (essai à l'eau sur une surface connue).
+int volumeHaIndicatif(String culture) {
+  final c = normalize(culture);
+  if (c.contains('vigne') ||
+      c.contains('arbre') ||
+      c.contains('verger') ||
+      c.contains('rosier') ||
+      c.contains('pepiniere') ||
+      c.contains('ornement')) {
+    return 500;
+  }
+  if (c.contains('tomate') ||
+      c.contains('laitue') ||
+      c.contains('salade') ||
+      c.contains('fraisier') ||
+      c.contains('legume') ||
+      c.contains('maraich') ||
+      c.contains('poivron') ||
+      c.contains('concombre')) {
+    return 300;
+  }
+  if (c.contains('ble') ||
+      c.contains('orge') ||
+      c.contains('mais') ||
+      c.contains('colza') ||
+      c.contains('tournesol') ||
+      c.contains('cereale') ||
+      c.contains('betterave') ||
+      c.contains('avoine') ||
+      c.contains('seigle')) {
+    return 150;
+  }
+  return 200;
+}
+
+/// Volume total de bouillie pour une surface traitée, en litres.
+double volumeTotalLitres(double volumeHa, double surfaceM2) =>
+    volumeHa * surfaceM2 / 10000;
+
 /// Surface en mètres carrés, formatée à la française.
 String formatM2(double? value) {
   if (value == null) return '';
@@ -229,21 +272,42 @@ String _groupThousands(int value) {
   return buffer.toString();
 }
 
-/// Quantité de produit à prélever pour une surface donnée, à partir d'une dose
-/// exprimée par hectare ou par 10 m². Renvoie une chaîne vide si l'unité n'est
-/// pas reconnue ou si les valeurs sont inutilisables.
-String doseQuantite(String dose, String unite, double surfaceM2) {
+/// Quantité de produit à prélever, à partir d'une dose exprimée par hectare,
+/// par hectolitre de bouillie, par m² ou par 10 m².
+///
+/// Les doses par hectolitre (L/hL) sont une concentration : il faut le volume
+/// de bouillie pour trouver la quantité, d'où le paramètre optionnel.
+/// Renvoie une chaîne vide si l'unité n'est pas reconnue ou si une donnée
+/// indispensable manque.
+String doseQuantite(
+  String dose,
+  String unite,
+  double surfaceM2, {
+  double? volumeBouillie,
+}) {
   final value = double.tryParse(dose.replaceAll(',', '.').trim());
-  if (value == null || value <= 0 || surfaceM2 <= 0) return '';
+  if (value == null || value <= 0) return '';
 
   final unit = unite.toLowerCase().replaceAll('²', '2').replaceAll(' ', '');
-  final perHectare = unit.contains('/ha');
-  final perTenSquareMetres = unit.contains('/10m');
-  if (!perHectare && !perTenSquareMetres) return '';
-
-  final factor = perHectare ? surfaceM2 / 10000 : surfaceM2 / 10;
-  final quantity = value * factor;
   final numerator = unit.split('/').first;
+
+  double quantity;
+  if (unit.contains('/hl')) {
+    final volume = volumeBouillie;
+    if (volume == null || volume <= 0) return '';
+    quantity = value * volume / 100; // 1 hL = 100 L de bouillie
+  } else if (unit.contains('/10m')) {
+    if (surfaceM2 <= 0) return '';
+    quantity = value * surfaceM2 / 10;
+  } else if (unit.contains('/m2')) {
+    if (surfaceM2 <= 0) return '';
+    quantity = value * surfaceM2;
+  } else if (unit.contains('/ha')) {
+    if (surfaceM2 <= 0) return '';
+    quantity = value * surfaceM2 / 10000;
+  } else {
+    return '';
+  }
 
   switch (numerator) {
     case 'l':
