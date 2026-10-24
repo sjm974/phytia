@@ -5,6 +5,7 @@ import '../../data/journal_models.dart';
 import '../../data/models.dart';
 import '../../data/scope.dart';
 import '../theme.dart';
+import 'cible_warning.dart';
 import 'pickers.dart';
 
 /// Saisie d'un traitement, éventuellement préremplie depuis une fiche produit.
@@ -332,10 +333,12 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
           const SizedBox(height: 14),
           TextField(
             controller: _cible,
+            onChanged: (_) => setState(() {}),
             decoration: const InputDecoration(
               labelText: 'Cible (maladie, ravageur, adventice)',
             ),
           ),
+          CibleWarning(amm: _amm, culture: _culture, cible: _cible.text),
           const SizedBox(height: 14),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,

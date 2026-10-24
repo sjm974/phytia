@@ -255,6 +255,15 @@ int volumeHaIndicatif(String culture) {
 double volumeTotalLitres(double volumeHa, double surfaceM2) =>
     volumeHa * surfaceM2 / 10000;
 
+/// Vrai si la cible saisie ressemble à une cible du catalogue.
+/// Tolérant : « Mildiou » correspond à « Mildiou(s) ».
+bool cibleCorrespond(String saisie, String catalogue) {
+  final a = normalize(saisie).trim();
+  final b = normalize(catalogue).trim();
+  if (a.length < 3 || b.isEmpty) return false;
+  return a.contains(b) || b.contains(a);
+}
+
 /// Surface en mètres carrés, formatée à la française.
 String formatM2(double? value) {
   if (value == null) return '';

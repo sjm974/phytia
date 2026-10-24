@@ -230,6 +230,18 @@ void main() {
     });
   });
 
+  group('garde-fou de cible', () {
+    test('tolère les variantes de libellé', () {
+      expect(cibleCorrespond('Mildiou', 'Mildiou(s)'), isTrue);
+      expect(cibleCorrespond('mildiou(s)', 'Mildiou'), isTrue);
+      expect(cibleCorrespond('Oïdium', 'Oïdium(s)'), isTrue);
+      expect(cibleCorrespond('Puceron', 'Pucerons'), isTrue);
+      expect(cibleCorrespond('Mildiou', 'Aleurodes'), isFalse);
+      expect(cibleCorrespond('', 'Mildiou(s)'), isFalse);
+      expect(cibleCorrespond('ab', 'Mildiou'), isFalse);
+    });
+  });
+
   test('surface formatée en mètres carrés', () {
     expect(formatM2(1400), '1 400 m²');
     expect(formatM2(125.5), '125,5 m²');

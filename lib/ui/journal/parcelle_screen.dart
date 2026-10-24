@@ -5,6 +5,7 @@ import '../../data/journal_models.dart';
 import '../../data/scope.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import 'cible_warning.dart';
 import 'parcelle_form.dart';
 import 'pickers.dart';
 import 'traitement_form.dart';
@@ -291,61 +292,69 @@ class ParcelleScreen extends StatelessWidget {
 
     final confirme = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(produit.name),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: cibleCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Cible',
-                helperText: 'Peut différer de celle du premier produit',
+      builder: (context) => StatefulBuilder(
+        builder: (context, setLocal) => AlertDialog(
+          title: Text(produit.name),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: cibleCtrl,
+                onChanged: (_) => setLocal(() {}),
+                decoration: const InputDecoration(
+                  labelText: 'Cible',
+                  helperText: 'Peut différer de celle du premier produit',
+                ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: TextField(
-                    controller: doseCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
+              CibleWarning(
+                amm: produit.amm,
+                culture: base.culture,
+                cible: cibleCtrl.text,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: TextField(
+                      controller: doseCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: const InputDecoration(labelText: 'Dose'),
                     ),
-                    decoration: const InputDecoration(labelText: 'Dose'),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextField(
-                    controller: uniteCtrl,
-                    decoration: const InputDecoration(labelText: 'Unité'),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: uniteCtrl,
+                      decoration: const InputDecoration(labelText: 'Unité'),
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: darCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'DAR',
-                suffixText: 'jours',
+                ],
               ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: darCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'DAR',
+                  suffixText: 'jours',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Annuler'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Ajouter'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Annuler'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Ajouter'),
-          ),
-        ],
       ),
     );
 
