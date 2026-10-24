@@ -26,6 +26,9 @@ aucun compte, aucune donnée envoyée.
 - **Produits équivalents** : depuis une fiche, les substituts à composition
   déclarée identique (même substance, même dose), avec ceux réellement autorisés
   pour l'usage consulté et ceux qui ne le sont pas.
+- **Registre 2027** : SIRET de l'exploitation, délai de rentrée, export aux
+  intitulés de la notice du ministère (CSV et JSON), avec contrôle des mentions
+  manquantes.
 - **Carnet de traitement** : parcelles (culture, **mode de conduite**, **position
   GPS** relevée au champ), traitements horodatés (**heures**, dose, **volume de
   bouillie** calculé depuis un volume/ha, stade BBCH, opérateur), **date de récolte possible calculée depuis

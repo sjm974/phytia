@@ -194,6 +194,8 @@ class ParcelleScreen extends StatelessWidget {
               _row('Quantité à prélever', JournalExport.quantite(traitement)),
               _row('Volume de bouillie', _volume(traitement)),
               _row('Heures', traitement.heureLabel),
+              _row('Délai de rentrée', traitement.rentreeLabel),
+              _row('SIRET', traitement.siret),
               _row('Mode de conduite', libelleMode(traitement.modeConduite)),
               _row('Position', traitement.positionLabel),
               _row('Stade BBCH', traitement.stadeBbch),

@@ -26,13 +26,32 @@ class ParcellesScreen extends StatelessWidget {
           appBar: AppBar(
             title: const Text('Mes parcelles'),
             actions: [
-              PopupMenuButton<bool>(
-                tooltip: 'Exporter le carnet',
+              PopupMenuButton<String>(
+                tooltip: 'Exporter',
                 icon: const Icon(Icons.ios_share),
-                onSelected: (pdf) => exportJournal(context, pdf: pdf),
+                onSelected: (choix) {
+                  if (choix == 'pdf') {
+                    exportJournal(context, pdf: true);
+                  } else if (choix == 'csv') {
+                    exportJournal(context, pdf: false);
+                  } else if (choix == 'registre-csv') {
+                    exportRegistre(context, json: false);
+                  } else {
+                    exportRegistre(context, json: true);
+                  }
+                },
                 itemBuilder: (context) => const [
-                  PopupMenuItem(value: false, child: Text('Exporter en CSV')),
-                  PopupMenuItem(value: true, child: Text('Exporter en PDF')),
+                  PopupMenuItem(value: 'csv', child: Text('Carnet — CSV')),
+                  PopupMenuItem(value: 'pdf', child: Text('Carnet — PDF')),
+                  PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: 'registre-csv',
+                    child: Text('Registre 2027 — CSV'),
+                  ),
+                  PopupMenuItem(
+                    value: 'registre-json',
+                    child: Text('Registre 2027 — JSON'),
+                  ),
                 ],
               ),
             ],

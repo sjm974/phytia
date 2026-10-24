@@ -7,18 +7,26 @@ import 'package:path_provider/path_provider.dart';
 /// Données personnelles de l'utilisateur : stock, favoris, cultures récentes.
 /// Tout reste sur l'appareil, dans un simple fichier JSON.
 class UserStore extends ChangeNotifier {
-  UserStore._(this._file, this._stock, this._favorites, this._recentCultures);
+  UserStore._(
+    this._file,
+    this._stock,
+    this._favorites,
+    this._recentCultures,
+    this._siret,
+  );
 
   final File? _file;
   final Set<String> _stock;
   final Set<String> _favorites;
   final List<String> _recentCultures;
+  String _siret;
 
   static Future<UserStore> load() async {
     File? file;
     Set<String> stock = <String>{};
     Set<String> favorites = <String>{};
     List<String> recent = <String>[];
+    var siret = '';
     try {
       final dir = await getApplicationSupportDirectory();
       file = File('${dir.path}${Platform.pathSeparator}phytia_user.json');
@@ -30,16 +38,25 @@ class UserStore extends ChangeNotifier {
             (json['favoris'] as List?)?.cast<String>().toSet() ?? <String>{};
         recent =
             (json['recent'] as List?)?.cast<String>().toList() ?? <String>[];
+        siret = json['siret'] as String? ?? '';
       }
     } catch (error) {
       debugPrint('Phytia: stockage local indisponible ($error)');
     }
-    return UserStore._(file, stock, favorites, recent);
+    return UserStore._(file, stock, favorites, recent, siret);
   }
 
   List<String> get stock => _stock.toList();
   List<String> get favorites => _favorites.toList();
   List<String> get recentCultures => List.unmodifiable(_recentCultures);
+
+  /// SIRET de l'exploitation, repris dans chaque enregistrement du registre.
+  String get siret => _siret;
+
+  void setSiret(String value) {
+    _siret = value.trim();
+    _persist();
+  }
 
   bool inStock(String amm) => _stock.contains(amm);
   bool isFavorite(String amm) => _favorites.contains(amm);
@@ -73,6 +90,7 @@ class UserStore extends ChangeNotifier {
           'stock': _stock.toList(),
           'favoris': _favorites.toList(),
           'recent': _recentCultures,
+          'siret': _siret,
         }),
       );
     } catch (error) {

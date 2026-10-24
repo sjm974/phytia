@@ -121,6 +121,8 @@ class Traitement {
     this.heureFin = '',
     this.volumeBouillie,
     this.interventionId = '',
+    this.siret = '',
+    this.delaiRentreeHeures,
   });
 
   final String id;
@@ -157,6 +159,15 @@ class Traitement {
   final String interventionId;
 
   String get intervention => interventionId.isEmpty ? id : interventionId;
+
+  /// SIRET de l'applicateur, recopié pour que la ligne soit autoportante.
+  final String siret;
+
+  /// Délai de rentrée sur la parcelle, en heures (distinct du DAR).
+  final int? delaiRentreeHeures;
+
+  String get rentreeLabel =>
+      delaiRentreeHeures == null ? '' : '§{delaiRentreeHeures} h';
 
   /// Date à partir de laquelle la récolte est possible sur cette parcelle.
   DateTime? get recoltePossibleLe =>
@@ -220,6 +231,8 @@ class Traitement {
     'fin': heureFin,
     'bouillie': volumeBouillie,
     'intervention': interventionId,
+    'siret': siret,
+    'rentree': delaiRentreeHeures,
   };
 
   factory Traitement.fromJson(Map<String, dynamic> json) => Traitement(
@@ -244,6 +257,8 @@ class Traitement {
     heureFin: json['fin'] as String? ?? '',
     volumeBouillie: (json['bouillie'] as num?)?.toDouble(),
     interventionId: json['intervention'] as String? ?? '',
+    siret: json['siret'] as String? ?? '',
+    delaiRentreeHeures: (json['rentree'] as num?)?.toInt(),
   );
 }
 

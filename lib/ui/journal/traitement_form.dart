@@ -37,6 +37,8 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
   late final TextEditingController _operateur;
   late final TextEditingController _note;
   late final TextEditingController _volumeHa;
+  late final TextEditingController _siret;
+  late final TextEditingController _rentree;
 
   late DateTime _date;
   String _amm = '';
@@ -79,6 +81,10 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
     _operateur = TextEditingController(text: existant?.operateur ?? '');
     _note = TextEditingController(text: existant?.note ?? '');
     _volumeHa = TextEditingController();
+    _siret = TextEditingController(text: existant?.siret ?? '');
+    _rentree = TextEditingController(
+      text: existant?.delaiRentreeHeures?.toString() ?? '',
+    );
   }
 
   /// Quantité à prélever d'après la dose et la surface traitée.
@@ -126,6 +132,7 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
     _culture = parcelle?.culture ?? '';
     _surfaceParcelle = parcelle?.surfaceM2;
     if (_mode.isEmpty) _mode = parcelle?.modeConduite ?? '';
+    if (_siret.text.trim().isEmpty) _siret.text = scope.store.siret;
     if (_latitude == null) {
       _latitude = parcelle?.latitude;
       _longitude = parcelle?.longitude;
@@ -152,6 +159,8 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
       _operateur,
       _note,
       _volumeHa,
+      _siret,
+      _rentree,
     ]) {
       controller.dispose();
     }
@@ -249,6 +258,8 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
       heureFin: _heureFin,
       volumeBouillie: _volumeTotal,
       interventionId: widget.existant?.interventionId ?? '',
+      siret: _siret.text.trim(),
+      delaiRentreeHeures: int.tryParse(_rentree.text.trim()),
     );
 
     if (widget.existant == null) {
@@ -256,6 +267,8 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
     } else {
       journal.updateTraitement(traitement);
     }
+    // Le SIRET est mémorisé pour les prochains enregistrements.
+    if (traitement.siret.isNotEmpty) scope.store.setSiret(traitement.siret);
     if (!mounted) return;
     Navigator.of(context).pop();
   }
@@ -447,6 +460,33 @@ class _TraitementFormScreenState extends State<TraitementFormScreen> {
                   decoration: const InputDecoration(
                     labelText: 'Opérateur',
                     hintText: 'Nom, certiphyto',
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _rentree,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Délai de rentrée',
+                    suffixText: 'h',
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                flex: 2,
+                child: TextField(
+                  controller: _siret,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'SIRET de l\'exploitation',
+                    hintText: '14 chiffres',
                   ),
                 ),
               ),
