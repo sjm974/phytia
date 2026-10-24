@@ -1,0 +1,101 @@
+name: Catalogue E-Phy
+
+# Récupère l'archive ouverte de l'Anses, régénère les fichiers du catalogue
+# et les publie dans une release au tag fixe « data ».
+#
+# L'application lit :
+#   https://github.com/<compte>/<dépôt>/releases/download/data/manifest.json
+# puis les deux fichiers .json.gz. Le manifeste est publié en dernier : un
+# client ne voit jamais un manifeste pointant vers des fichiers absents.
+
+on:
+  schedule:
+    - cron: '0 4 * * 3' # mercredi 04:00 UTC (Anses publie le mardi soir)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Dépendances
+        run: flutter pub get
+
+      - name: Localiser l'archive E-Phy
+        id: source
+        run: |
+          set -euo pipefail
+          API="https://www.data.gouv.fr/api/1/datasets/donnees-ouvertes-du-catalogue-e-phy-des-produits-phytopharmaceutiques-matieres-fertilisantes-et-supports-de-culture-adjuvants-produits-mixtes-et-melanges/"
+          curl -fsSL "$API" -o dataset.json
+          URL=$(jq -r '[.resources[] | select(.format == "zip") | select(.title | test("utf8"; "i"))][0].url' dataset.json)
+          DATE=$(jq -r '.last_update' dataset.json | cut -c1-10)
+          test -n "$URL"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "date=$DATE" >> "$GITHUB_OUTPUT"
+          echo "Archive : $URL"
+          echo "Version : $DATE"
+
+      - name: Télécharger et décompresser
+        run: |
+          set -euo pipefail
+          mkdir -p _data/csv
+          curl -fsSL "${{ steps.source.outputs.url }}" -o ephy.zip
+          unzip -o -q ephy.zip -d _data/csv
+          ls -la _data/csv | head -20
+
+      - name: Générer le catalogue
+        run: dart run tool/build_dataset.dart --csv=_data/csv --out=assets/data --date="${{ steps.source.outputs.date }}"
+
+      - name: Version déjà publiée ?
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/prev && mkdir -p /tmp/prev
+          PREV=""
+          if gh release download data --pattern manifest.json --dir /tmp/prev --clobber >/dev/null 2>&1; then
+            PREV=$(jq -r '.version // empty' /tmp/prev/manifest.json)
+          fi
+          echo "Publiée : $PREV — disponible : ${{ steps.source.outputs.date }}"
+          if [ "$PREV" = "${{ steps.source.outputs.date }}" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publier la release « data »
+        if: steps.check.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG=data
+          USAGES=$(jq -r '.counts.usages' assets/data/manifest.json)
+          PRODUITS=$(jq -r '.counts.produits' assets/data/manifest.json)
+
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" \
+              --title "Catalogue E-Phy" \
+              --notes "Fichiers du catalogue E-Phy (Anses) consommés par l'application Phytia." \
+              --latest=false
+          fi
+
+          # Les données d'abord, le manifeste en dernier (ordre important).
+          gh release upload "$TAG" \
+            assets/data/phytia_core.json.gz \
+            assets/data/phytia_details.json.gz \
+            --clobber
+
+          gh release upload "$TAG" assets/data/manifest.json --clobber
+
+          echo "Publié : version ${{ steps.source.outputs.date }}, $USAGES usages, $PRODUITS produits."

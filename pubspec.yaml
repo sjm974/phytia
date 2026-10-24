@@ -1,0 +1,27 @@
+name: phytia
+description: "Phytia — le bon produit phytosanitaire, sur la bonne culture. Données Anses E-Phy."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.13.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  crypto: ^3.0.6
+  path_provider: ^2.1.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  test: ^1.26.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/data/phytia_core.json.gz
+    - assets/data/phytia_details.json.gz

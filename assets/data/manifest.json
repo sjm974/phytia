@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "version": "2026-10-20",
+  "generated_at": "2026-10-24T05:27:37.992483Z",
+  "source": "Anses — E-Phy",
+  "counts": {
+    "usages": 19598,
+    "produits": 15168,
+    "cultures": 130,
+    "cibles": 1285
+  },
+  "files": {
+    "core": {
+      "name": "phytia_core.json.gz",
+      "bytes": 694011,
+      "sha256": "b8f5e608e9f24ad1adaeb898cfd14b4af4a0af9833cc995c1b7284b47fc37388"
+    },
+    "details": {
+      "name": "phytia_details.json.gz",
+      "bytes": 1007782,
+      "sha256": "ca9578492fa9e306bc6eaddf1898b607f2a6c7f5315614a711fd887d07fa7139"
+    }
+  }
+}
