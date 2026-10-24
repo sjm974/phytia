@@ -267,6 +267,9 @@ class ParcelleScreen extends StatelessWidget {
     final scope = PhytiaScope.of(context);
     final data = scope.dataset;
 
+    // On part de l'usage du catalogue propre à ce second produit : sa cible
+    // peut être différente de celle du premier.
+    var cible = base.cible;
     var dose = '';
     var unite = '';
     var dar = '';
@@ -275,11 +278,13 @@ class ParcelleScreen extends StatelessWidget {
         .where((u) => u.culture == base.culture)
         .toList();
     if (usages.isNotEmpty) {
+      cible = usages.first.targetLabel;
       dose = usages.first.dose;
       unite = usages.first.doseUnit;
       dar = usages.first.darDays;
     }
 
+    final cibleCtrl = TextEditingController(text: cible);
     final doseCtrl = TextEditingController(text: dose);
     final uniteCtrl = TextEditingController(text: unite);
     final darCtrl = TextEditingController(text: dar);
@@ -291,6 +296,14 @@ class ParcelleScreen extends StatelessWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            TextField(
+              controller: cibleCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Cible',
+                helperText: 'Peut différer de celle du premier produit',
+              ),
+            ),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
@@ -337,6 +350,7 @@ class ParcelleScreen extends StatelessWidget {
     );
 
     if (confirme != true) {
+      cibleCtrl.dispose();
       doseCtrl.dispose();
       uniteCtrl.dispose();
       darCtrl.dispose();
@@ -351,7 +365,7 @@ class ParcelleScreen extends StatelessWidget {
         amm: produit.amm,
         produit: produit.name,
         culture: base.culture,
-        cible: base.cible,
+        cible: cibleCtrl.text.trim(),
         dose: doseCtrl.text.trim(),
         doseUnite: uniteCtrl.text.trim(),
         darJours: int.tryParse(darCtrl.text.trim()),
