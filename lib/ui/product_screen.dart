@@ -244,16 +244,26 @@ Future<void> _enregistrerTraitement(
               ),
             ),
           ),
-          for (final p in journal.parcelles)
-            ListTile(
-              leading: const Icon(Icons.terrain, color: phytiaGreen),
-              title: Text(p.nom),
-              subtitle: Text(
-                p.culture.isEmpty ? 'Culture non précisée' : p.culture,
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 360),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final p in journal.parcelles)
+                    ListTile(
+                      leading: const Icon(Icons.terrain, color: phytiaGreen),
+                      title: Text(p.nom),
+                      subtitle: Text(
+                        p.culture.isEmpty ? 'Culture non précisée' : p.culture,
+                      ),
+                      trailing: const Icon(Icons.chevron_right, size: 18),
+                      onTap: () => Navigator.of(context).pop(p),
+                    ),
+                ],
               ),
-              trailing: const Icon(Icons.chevron_right, size: 18),
-              onTap: () => Navigator.of(context).pop(p),
             ),
+          ),
           const SizedBox(height: 8),
         ],
       ),

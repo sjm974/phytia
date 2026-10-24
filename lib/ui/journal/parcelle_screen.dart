@@ -152,7 +152,7 @@ class ParcelleScreen extends StatelessWidget {
       showDragHandle: true,
       backgroundColor: Colors.white,
       builder: (context) => SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
