@@ -174,6 +174,7 @@ class ParcelleScreen extends StatelessWidget {
               _row('Cible', traitement.cible),
               _row('Dose', traitement.doseLabel),
               _row('Surface traitée', formatM2(traitement.surfaceTraiteeM2)),
+              _row('Quantité à prélever', JournalExport.quantite(traitement)),
               _row('Stade BBCH', traitement.stadeBbch),
               _row(
                 'Délai avant récolte',
@@ -369,6 +370,7 @@ class _TraitementTile extends StatelessWidget {
                   traitement.cible,
                   traitement.doseLabel,
                   formatM2(traitement.surfaceTraiteeM2),
+                  JournalExport.quantite(traitement),
                 ].where((e) => e.isNotEmpty).join(' · '),
                 style: TextStyle(fontSize: 12, color: scheme.onSurfaceVariant),
               ),

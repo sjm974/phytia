@@ -107,6 +107,8 @@ void main() {
       );
       expect(csv.contains('02/06/2026'), isTrue);
       expect(csv.contains('Surface (m²)'), isTrue);
+      expect(csv.contains('Quantité'), isTrue);
+      expect(csv.contains(';224 mL'), isTrue);
       expect(csv.contains(';1400;'), isTrue);
       expect(csv.contains('"Parcelle humide; ne pas traiter"'), isTrue);
     });

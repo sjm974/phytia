@@ -19,6 +19,7 @@ class JournalExport {
     'Dose',
     'Unité',
     'Surface (m²)',
+    'Quantité',
     'Stade BBCH',
     'DAR (j)',
     'Récolte possible le',
@@ -50,6 +51,7 @@ class JournalExport {
           t.dose,
           t.doseUnite,
           _number(t.surfaceTraiteeM2),
+          quantite(t),
           t.stadeBbch,
           t.darJours?.toString() ?? '',
           recolte == null ? '' : frDate(recolte),
@@ -60,6 +62,13 @@ class JournalExport {
     }
     return buffer.toString();
   }
+
+  /// Quantité de produit à prélever pour un traitement enregistré.
+  static String quantite(Traitement traitement) => doseQuantite(
+    traitement.dose,
+    traitement.doseUnite,
+    traitement.surfaceTraiteeM2 ?? 0,
+  );
 
   /// PDF paysage : une ligne par traitement, tri par date.
   static Future<Uint8List> toPdf({
@@ -80,6 +89,7 @@ class JournalExport {
         t.cible,
         t.doseLabel,
         _number(t.surfaceTraiteeM2),
+        quantite(t),
         t.darJours?.toString() ?? '',
         recolte == null ? '' : frDate(recolte),
       ].map(pdfSafe).toList();
@@ -116,6 +126,7 @@ class JournalExport {
               'Cible',
               'Dose',
               'Surface',
+              'Quantité',
               'DAR',
               'Récolte dès',
             ].map(pdfSafe).toList(),
@@ -137,9 +148,10 @@ class JournalExport {
               2: pw.FlexColumnWidth(4),
               3: pw.FlexColumnWidth(3.5),
               4: pw.FlexColumnWidth(2),
-              5: pw.FlexColumnWidth(2),
-              6: pw.FlexColumnWidth(1),
-              7: pw.FlexColumnWidth(2),
+              5: pw.FlexColumnWidth(1.6),
+              6: pw.FlexColumnWidth(1.6),
+              7: pw.FlexColumnWidth(1),
+              8: pw.FlexColumnWidth(2),
             },
           ),
         ],
